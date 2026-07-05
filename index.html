@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BD Operating System — Team Hub</title>
+<style>
+  :root{
+    /* University of Utah Health brand palette — see Brand_Design_Reference.md */
+    --red:#BE0000;        /* Utah Red */
+    --red-dark:#890000;   /* Red Rocks */
+    --red-tint:#fdf0f0;
+    --ink:#414042;        /* 90% Black — body text */
+    --ink-soft:#6e6f72;   /* between 90% Black and 50% Gray for readable secondary text */
+    --gray-50:#939598;    /* 50% Gray — captions, subdued labels */
+    --line:#E2E6E6;       /* Salt Flat Gray — dividers */
+    --bg:#f3f5f5;         /* light tint of Salt Flat Gray */
+    --card:#ffffff;
+    --gold:#890000;       /* Red Rocks accent (outputs) */
+    --teal:#4F868E;       /* Lake Powell accent (behaviors) */
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Century Gothic","CenturyGothic","Futura",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55}
+  a{color:var(--red);text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  .brandstrip{background:#fff;border-bottom:3px solid var(--red)}
+  .brandstrip img{display:block;width:100%;max-width:1180px;margin:0 auto;padding:10px 24px;height:auto}
+  header{position:sticky;top:0;z-index:50;background:#414042;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+  .hwrap{max-width:1180px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .brandbar{width:6px;height:38px;background:var(--red);border-radius:2px}
+  .htitle{font-size:19px;font-weight:700;letter-spacing:.2px}
+  .hsub{font-size:11.5px;color:#bdbec0;text-transform:uppercase;letter-spacing:1.4px}
+  nav{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+  nav button{background:transparent;border:1px solid transparent;color:#d9dadb;font-size:13.5px;padding:7px 14px;border-radius:6px;cursor:pointer;font-weight:600}
+  nav button:hover{color:#fff;border-color:#6e6f72}
+  nav button.active{background:var(--red);color:#fff}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:28px 24px 80px}
+  .view{display:none}
+  .view.on{display:block}
+
+  /* HERO */
+  .hero{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:34px 34px 28px;margin-bottom:22px}
+  .hero h1{font-size:30px;font-weight:800;letter-spacing:-.3px}
+  .hero h1 span{color:var(--red)}
+  .hero p.lead{margin-top:10px;font-size:16px;color:var(--ink-soft);max-width:820px}
+  .hero .tag{display:inline-block;margin-bottom:14px;font-size:11px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--red);background:var(--red-tint);padding:5px 12px;border-radius:999px}
+
+  /* LOOP DIAGRAM */
+  .loop{margin:26px 0 6px}
+  .loop-row{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+  .snode{position:relative;background:var(--card);border:1.5px solid var(--line);border-radius:11px;padding:14px 10px 12px;text-align:center;cursor:pointer;transition:all .15s ease}
+  .snode:hover{border-color:var(--red);transform:translateY(-2px);box-shadow:0 6px 16px rgba(190,0,0,.10)}
+  .snode.sel{border-color:var(--red);background:var(--red-tint);box-shadow:0 4px 14px rgba(190,0,0,.12)}
+  .snode .num{font-size:11px;font-weight:800;color:var(--red);letter-spacing:1px}
+  .snode .nm{font-size:14.5px;font-weight:750;margin-top:2px}
+  .snode .vb{font-size:10.5px;text-transform:uppercase;letter-spacing:1.1px;color:var(--ink-soft);margin-top:3px}
+  .snode .q{font-size:11.5px;color:var(--ink-soft);margin-top:6px;font-style:italic;line-height:1.35}
+  .loopback{display:flex;align-items:center;gap:10px;margin-top:12px;color:var(--ink-soft);font-size:12.5px}
+  .loopback .arrow{flex:1;border-top:2px dashed #939598;position:relative;height:0}
+  .loopback .arrow::before{content:"◀";position:absolute;left:-2px;top:-9px;color:#939598;font-size:11px}
+  .loopback em{white-space:nowrap;font-style:normal;font-weight:600;color:var(--teal)}
+
+  /* STAGE DETAIL */
+  .stage-detail{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-top:20px;overflow:hidden}
+  .sd-head{padding:26px 32px;border-bottom:1px solid var(--line);display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;background:linear-gradient(180deg,#fff, #fbfbfc)}
+  .sd-num{font-size:44px;font-weight:850;color:var(--red);line-height:1;min-width:70px}
+  .sd-head h2{font-size:25px;font-weight:800}
+  .sd-head .verb{font-size:12px;font-weight:700;letter-spacing:1.6px;text-transform:uppercase;color:var(--ink-soft);margin-top:2px}
+  .sd-head .purpose{margin-top:10px;font-size:15px;color:var(--ink-soft);max-width:760px}
+  .keymsg{margin-top:12px;border-left:4px solid var(--red);background:var(--red-tint);padding:10px 16px;border-radius:0 8px 8px 0;font-size:14px;font-weight:600;max-width:760px}
+  .sd-body{display:grid;grid-template-columns:1.15fr .85fr;gap:0}
+  .sd-col{padding:24px 32px}
+  .sd-col + .sd-col{border-left:1px solid var(--line);background:#fafbfc}
+  h3.sec{font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);margin-bottom:12px}
+  h3.sec.alt{color:var(--teal)}
+  h3.sec.gold{color:var(--gold)}
+  .qlist{list-style:none;margin-bottom:24px}
+  .qlist li{padding:7px 0 7px 26px;position:relative;font-size:14.5px}
+  .qlist li::before{content:"?";position:absolute;left:0;top:7px;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .blist{list-style:none;margin-bottom:24px}
+  .blist li{padding:6px 0 6px 24px;position:relative;font-size:14px;color:var(--ink-soft)}
+  .blist li::before{content:"›";position:absolute;left:6px;color:var(--teal);font-weight:800}
+  .olist{list-style:none}
+  .olist li{padding:6px 0 6px 24px;position:relative;font-size:14px}
+  .olist li::before{content:"✓";position:absolute;left:0;color:var(--gold);font-weight:800}
+
+  .tool{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;margin-bottom:8px;background:var(--card)}
+  .tool .tn{font-size:13.5px;font-weight:650;flex:1}
+  .tool .tn small{display:block;font-weight:400;color:var(--ink-soft);font-size:12px;margin-top:1px}
+  .badge{font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:3px 9px;border-radius:999px;white-space:nowrap;align-self:center}
+  .b-dl{background:var(--red);color:#fff}
+  .b-dl:hover{background:var(--red-dark);text-decoration:none}
+  .b-ss{background:#e3eef0;color:#4F868E}
+  .b-ai{background:#faeae3;color:#a8593c}
+  .b-tab{background:#4F868E;color:#fff}
+  .b-soon{background:#E2E6E6;color:#77787b}
+  .b-drive{background:#414042;color:#fff}
+  .b-drive:hover{background:#2b2b2d;text-decoration:none}
+  .b-drive.pending{background:#E2E6E6;color:#77787b;pointer-events:none}
+
+  /* RESOURCE LIBRARY */
+  .lib-tools{display:flex;gap:12px;flex-wrap:wrap;margin:6px 0 20px}
+  .lib-tools input{flex:1;min-width:240px;padding:11px 16px;border:1.5px solid var(--line);border-radius:9px;font-size:14.5px;outline:none}
+  .lib-tools input:focus{border-color:var(--red)}
+  .fchip{padding:8px 15px;border:1.5px solid var(--line);background:var(--card);border-radius:999px;font-size:13px;font-weight:600;cursor:pointer;color:var(--ink-soft)}
+  .fchip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .rcard{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:16px 18px;margin-bottom:10px}
+  .ric{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:800;color:#fff;flex-shrink:0;letter-spacing:.4px}
+  .ric.docx{background:#4F868E}.ric.pptx{background:#c96b4e}.ric.pdf{background:#890000}.ric.html{background:#414042}.ric.skill{background:#BE0000}
+  .rmain{flex:1}
+  .rmain .rt{font-size:15px;font-weight:700}
+  .rmain .rd{font-size:13px;color:var(--ink-soft);margin-top:2px}
+  .rmain .rs{margin-top:7px;display:flex;gap:6px;flex-wrap:wrap}
+  .stagechip{font-size:10.5px;font-weight:700;background:var(--bg);border:1px solid var(--line);color:var(--ink-soft);padding:2px 9px;border-radius:999px}
+  .dlbtn{align-self:center;background:var(--red);color:#fff;font-size:12.5px;font-weight:700;padding:9px 18px;border-radius:8px;white-space:nowrap}
+  .dlbtn:hover{background:var(--red-dark);text-decoration:none}
+  .dlbtn.ghost{background:#E2E6E6;color:#939598;pointer-events:none}
+  .dlbtn.drive{background:#414042}
+  .dlbtn.drive:hover{background:#2b2b2d}
+
+  /* ABOUT */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+  .pcard{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px 24px}
+  .pcard h4{font-size:15px;font-weight:800;margin-bottom:8px;color:var(--red)}
+  .pcard p{font-size:14px;color:var(--ink-soft)}
+  .commit{background:#414042;color:#eceded;border-radius:12px;padding:24px 28px;margin-top:18px}
+  .commit h4{color:#fff;font-size:15px;font-weight:800;margin-bottom:10px;letter-spacing:.8px;text-transform:uppercase}
+  .commit ul{list-style:none}
+  .commit li{padding:5px 0 5px 22px;position:relative;font-size:14px}
+  .commit li::before{content:"—";position:absolute;left:0;color:var(--red)}
+
+  .note{font-size:12.5px;color:#939598;margin-top:14px}
+  footer{border-top:1px solid var(--line);margin-top:50px;padding:18px 24px;text-align:center;font-size:12px;color:#939598}
+
+  @media(max-width:900px){
+    .loop-row{grid-template-columns:repeat(2,1fr)}
+    .sd-body{grid-template-columns:1fr}
+    .sd-col + .sd-col{border-left:none;border-top:1px solid var(--line)}
+    .grid2{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+
+<div class="brandstrip"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABPsAAABtCAIAAABY9vMtAAAACXBIWXMAABcSAAAXEgFnn9JSAAAVw0lEQVR4nO3dTWgbaZ7H8adjgQKyVYsNChZI4IOtbpDZDPYedhWYiD21m+iwl7Hj7VuGaHAuM7Q74ICbGBJI3HQuDmPTuWX80pc9yLTCwi5OQ+tm74a1YMY2jBcJZCLGXsqydiKQlz08SaVcVZZKsmxJ5e+HHKRyvTxVkdP90/M8/+eTn7uvC3t8o7f6n8/Y3BkAAAAAgOa60uwGAAAAAABwLki8AAAAAABnIvECAAAAAJyJxAsAAAAAcCYSLwAAAADAmUi8AAAAAABnIvECAAAAAJyJxAsAAAAAcCYSLwAAAADAmUi8AAAAAABnIvECAAAAAJyJxAsAAAAAcCYSLwAAAADAmUi8AAAAAABnIvECAAAAAJyJxAsAAAAAcCYSLwAAAADAmUi8AAAAAABnIvECAAAAAJzJ1ewGoNWlY3cu4CqecKjv8aRh4+7UbDG9dZbTdo9E/fHxqqcKJ16c5SoAAAAAWhOJF1WoqY1mXbqY3jrL1X2jt2Tc3ZmYzq+sNq5dAAAAANoDo5rhTL7RW/3PZ4QQmSfzxF0AAADgciLxwoGUyJCMu0KIq0F/cxsDAAAAoFlIvHCaDm/npy+fydc7E9PdI9H+uYfNbRIAAACApiDxwmn6n8+4lC7xYTxzOnaneySqRIaa3S4AAAAAF43KVXAUJTLUMxKVr3Pzi0KIYnr7zS9/VVYLTW0XAAAAgCYg8cJR+h69X+Iov5w4PjySr0vZvea1CAAAAEDTMKoZzqFEhjyDIfnaNxa7/nrFf/e2O9Db3FYBAAAAaBYSL5yjNz4uX5QyuXTsjppa98fHh98kr79e8Y3eam7bAAAAAFw8RjXDIdyBXm0G735yTU1tqKmN3QffesIDvrGYmzWKAAAAgMunhsR7XPzf82sHcEZa3BVCqD+va6+L6e3dB982o0UAAAAAmqyGUc37q/+eX06cX1OAs/DeGNZeF9NbTWwJAAAAgBZR26jmnXvfCCF8Y7HzaQxQPyXyMfEaijN3eDs7B0NqakO+dQd6z169Ob+ceJfJ6bdcszd2OvNk3rBFuTGsb3zlne2z2R5NcXNrP7lmv22nKWVyb01fjQXvx6seqKbW9Z3zZ2G+nPnkV4N+O/+U1X0gAAAAWkHN83gJvWhBnvCAS+nS3kb2/9O8z87EdH5lVQjhG4tlny6c8Yr55YQWoSXlxrCdhGl56dNS5VnaabM9mtz8onw+egfJtes//VDTdd9lc+Zm20q8P6+f/e/ltMuZT65Ehmwl3noPBAAAQCuop3IVoRetxh34GO20PsbD1ImuOX1A9YQHiuntC2te6yurBXMHrxCimN4ubm5paz4BAAAA7aXOWs2EXrQUfSSz7GPUcyld3SNREq/eQXLt+PDI8kf55UTf4OQFtwcAAABoiCufuDrqO3Ln3jcUskI78gyG9EOgIYSo8LtsnpQLAAAAtIsrf/tvix3ezvoOJvSiLXR4O32jtz59+Z070CuE8IRJvCeUMjnDnGS948MjywHPAAAAQOtzeQZDg4kXm7E7p41prIzhzWhlsshQ90jUpXTtJ9dK2T3f6C2X0mUos9xG+h59ZXNWrSdsd/Jt1V7c/FJCv9zxObk2FlNuWFfwKm5umRdVDie+P+8mAQAAoN25hBCEXjiJJxxyB3p7RqL++Lg76C9lctkn82+XE/LjLav4FjfbdcFez2Co1uWCqqo6UuPg1euyWjjvjnF30F9TcemGPwcAAAA4z/vKVYRenMayJy0d+3XdJ/SEB/oeGyshubwWaarv0WT5sGDYuDs1ay46VdL12bqUruE3ybJaOEiu5b5c1O/sv3tbZqrg/bj/N+N134KTqKl18/LFV4N+w0POLyf8cZ4YAAAA2szHWs2EXlhqeE+aS+myeU7L4buWPY2l7IlRyvnlxJ+nZg2fZE94IPBhmVaW29Hkl4wdvD0jUc9gyDCKmMQLAACAdnRF/0aGXgpZoe2YCy8Z4m6Ht7N/boaCVQaWy/B2fxE1z9qVC/NeVLsAAACAxrhieE/oRZtSU+vaa99YTP8Z7vB2DiZe0K9rZl6Gt8Pb2TMSdQf9nvCAYWd+tQEAANB2jIlXEHrRng5+PNFXqR+C2/98RsZdNbVOR6We+VdV6901z1BgYV4AAAC0HYvEKwi9aEP6PFbK7v3lX/5Vvu6feyhTXFkt7ExMm0thXVqWy/Bq6wOZBzazMC8AAADajuu0H1DICu3l+PAov5zwjcVK2b030bHy/6hCiP65h9qHcGdi2lCUuLHOUr/avt2p2aqzkX1jMTu/epZ9tt0fgq4c2Gys2HwhC/NeDDW1ker5RbNbAQAAgPN1auIVhF60m8yTeeXG31nG3cyT+YNXr5vZuAYxr8xk5rVXCts8EKP785v6OO0bixkqNl/MwrwAAABAo1iPatYwvBltpJTd+4+//ydz3N1PrmWfLjS1aS3HvAyvEKLnixP9t5bdufxGAwAAoI1USbyC0Iu28n9/fSdOxt1SJrczMd3URrUi8zK8QjekWaJiMwAAANpd9cQrCL1oK/67t7W4W1YLf/zyt/UNy3cw62V4Tw5plsyzEliYFwAAAG2k0jxePeb0oi10f36z7/Gk9nZ3atbOxNeG8IQH7ExwNZdHbvhVrgb9lXcwL8Mrj9KvaSxZXiu/nOgbnDRvby8d3s5OG0s0v8vkzrXgGQAAAM6V3cQrCL1oee5Ab//zGe3tfnItv7IqXyuRofOOLn2PJxUbJaPOWB/Y5lUqsxxzkVtYyi0s2Tn87XJC/7VCm+ocDIUTL6rulnkyzyRwAACA9mVrVLOG4c1oZZ+9fKb1ScrVd7UfhRMvht8kfaO3mtS0FmK5DG9NWJgXAAAA7aKGPl7p7D29f93577/5x3+o41icvXPPwQJf3/XoBqnuTEzrP6LFzS3PYEjfA3xpWS7DWysnLcx7SZTVQjHNBGzA+TzhEGvIATgL8zS3dldz4hVCeAZDSmS47tVN3y4lCuv/Vd+xl5xiYxDm5eQO9Abvx7W3amrd8PncjN0ZTLzw2Ji36XgNGWfBwrxtp5TJZZ/MN7sVAM5d36NJF/+xA3AGzvsfhnoS787EdN1x1zd6i342NJxhWql5OaLjwyNCrzhlGd765JcT/vh4Q06FC+CxN28ZAABccs77H4aaE+/OxLRWDahWnvAAcRcNp0SG9CNs88sJy1AnQ+8vfvrBXa2UsYNZLsP76cvvqvbW7kxMG54qiRcAAACtr7bEe8a467wvDNAKDAXAK4zaPT48epfNXdrEa7kMr+H7gtP0jEQNlZzlwryXvM8cAAAALa6GxHv2uMusPzRch7dTn3jPXoi4xeWXEurPtsoJXA36Dd8FWC7Da3PBMH983Lx2kf2FeTM2JoQoN4apzQYAAIDGspt4ibtoTddOBjZ9H6Y70HuuC/A2hf1fQyUyVLX3u8Pb2W2v5LI76FciQ4ZvE+wvzGtzSVsSLwAAABrLVuIl7qJleW+cyEgHHxKv5QevuLl1aYc0W/Z+94xE7f9u+sZihjPIhXlZpggAAAAt60rVPYi7aGWGuFV5SLNn8PKuUmi5DK/vtq0hzVL3SLTD22nYaFkKCwAAAGgRVfp4ibtoZUpkSP+2uLn18XV6+80vf3X1Q4+uJxzqULqEENfGYpezm9c8pNkd6K1pFLFL6eoZiRr+QWBhXgAAALSySomXuIsW5wmfKBRcPizo35aye9o8Xq3vV7kxfAkTr+UyvDZrVp045HbM/G8CyxQBAACgZZ2aeHenZom7aHEdpmm6F3bpvkeThoBtiN+nCSe+N2y5Gjg1gZt3ts/l/fhwrgb85lPZbLCeEhmu2n5POFRfsys8h7rPqbk2FlNOTvnWP5/zOBAAAACtwDrx5pcT5pVIbCLu4sIYokhZLZy2Z8PVvQ5tTQOJG1W72B30N6pnu2qTXEpXw0sun/2cdT+BBj46AAAAXDyLxJtfTuzc+6a+0xF3UdW7TM7O6qwVDq/7WHeglw46AAAA4PIwJl7iLs5bKbtnc3XWWlX47HV/ftN3O8Y6OgAAAMClciLxniXudng7++dmiLtoIvNIY3eg1zcWu7T1mQEAAIBL7mPiPWPcHUy8qHtmI9BwHd7O/ucz+k7dUib3djnRMxLlgwoAAABcEu8TL3EXDqAvbtQzEtXi7n5yLb+UOHj1WpiKXQEAAABwMJcg7qJtlTI5ETmxxRMeKKa3hRBqaj03v1hWC/nlhHkpWgAAAACXgYu4i/ZlrtusRIZl4i1l93YffNuMRgEAAABoFVeIu2hfJVPi9VYbtMzqRAAAAMDlcaW+w4i7l1z/3MNmN0EIIUpZiz7eCvv3zz3kQwsAAABcHsb1eO0g7sI3FhNC1D1AoFHU1IZhi0vp6v78pixSZdA/91A2uyHSsTtCiHDihbaluLm1+2BWv1Hu0z83o62NJPfxhEN9jyeFEPnlRH454RuL+cZi+8m1vflFd8Df/3xGO2fmyfxhal3uIHc2NMNwKv2POrxdwftx/e9pWS3sTs2qqfVSds8THugeiQbvx80N027EzBMO+cZi8qeB+3H99wtltbAzMX18WOgeifrj45aHy0bKvzUlMuSNDPvj4/olzXanZovpLcNR8vbN59HuXb9R7lz5FrSjtN0M92I4W+XrAgAAoJXVnHiJu5BaJPQWN7cMn0bf7Zg58TY27gqrsF0+LBg2yrc796a1DGzY510mp6Y2vJFhIURnOKSmNoTY6Hs8qYVAWXarNz6u7Xxaeyx/evDqdTjxvcxyZbWwfn3k+PBI/qiY3i6mt0uZnAzY+oaZb0TPMxjq8HYdvHr9bmL6+k8/aE3NPpk/ePW6w9v56ctn5qPKaiEduyOnWGsPR01t5JcTn718pv0NFtNb5kt7Tf32ljerf5iVb0GTm1+Uu7mXEobEqz9b5esCAACgldWWeIm70GuF0FtMGxNvz0jUHejV12dueNytiZra2E+u6VcGtuQO+mWzD5JrsrXFzS15F/pjA1/f1TpmzbSfFje3du5NF9Pbud8vyiyXm188PjzyhAf6Hk8qkeHc/OLug2/zK6vB+3GtC1ryhEPhxPfy9e7UbDG93ffoK/mQ5Szo/uczb375q1J2b3dqVgbm/eRabmFJCPHZH57p+2w1Mu52eDv98fGekahL6VJT63+emi1l9zZjd4bfJPVHaSm9blVvQdpPrmkv+tSCZcsBAADQ1mqYx0vchZlvLNbcOb3qz+vmjfp829y4K+1OzZbVQtXdZLLV7khNrQshuj+/WccVPYPvR95q3d2H8mwjURkm/fFx3+gtJTJkbphL6VIiw/KPDIGewZB8+z40Kl0y6OZXVveTa3I8sxDCf/e2ZVLNzS/KuDuYeCEHWruDft9YbPhN0h3oPT482p2yHoFct6q3IITILyeOD4/cgV5PeOD48OjgQ/oFAACAk9SQeP3xceIuzJobemUsNPDHxzu8naI14q4nPFDK7uXmF6vuKZuqdTzKDNbzRZXOYdvNCMlzak+s//lMuN7vsJTIsP/ubSHEzsT0zsS07D0OnNL5LCcYm/8BcSldMpbvNyNt7v+4JoToGYnKx26eIw0AAAAHqKdyFWDQxOHNpeyeeSqvS+nyx8evBv1Nj7tCiL7Hk+nYr7NPF65Va4xnMNTh7Tw+PCpubrmD/g8VnowVlQ51Ib/v0aRlZC2rhdzvF4UQnvCA3OKPj79dThTT2+nYrzu8nT0j0e4volXHWle+LzW1Xkxvy27k/rmZ00YFy+m7lrcvGyBvWbuR3alZ7VTmslUNUcrkZLNlka3dB9+qqY1SJmcY4G142ub1nwEAANDiSLxoDN9YzBMObcbuaLWRLsx+cs2c+ipMdr1gSmTYN3orv7K6c2/6tF5QTc9IVA4VlnfkCQ8YMlgpu6efolw+PDEmOft0Ift0Qb9Fu6I76P/FTz9knszvJ9eOD4/yK6v5lVUlMqQvN12r/rmZNzdHhRDaLNkKDDdioL8RfYErc9mqhpC9ytrj9YQHiuntt8sJw8fG8LQBAADQdki8aBjPYGgw8eLiQ+9Bcq118q2lvseT+8k1NbXh+bHK8N3uL6L5ldWD5FopkxNCdJv6YH2jt3y3P/Z5yrHKluQwY30vrjvo738+0y9EcXNrP7mWfbqgpjZy84unLSZUlZZyK8dd2XFtWb6r9KHXVH8j+vx8NVApJ9dNDjJ3KV2ZJ/PyhRAib0q8hqedX0rkV1bPoz0AAAA4JyReNFJTQq9cZadyF+I5sXldl9IVvB/fffCtLGhcgRzDXExvy4JS5ojoDvor1DEOfH3XHx+XqxApkWH94fnlxLtM7tpYzB30ewZDnsHQsVrILSwdJNfqTrw2yY7rvflF8+3I5OkJD+hHRMsqUxVOeDXoF0IYam4d26gNJmlFsOUKSdr2UnZPTa3rL2142pZl0gAAANDKaqhcBdghQ68sHHVh3l542SF3oFcIIXsIJTlv9rTSyv74uDaltgKX0iXPUMruuQO9dZSVcildn/3hmRAit7CkL+u1/+Na9unCn3VVkWVidJ9PJ6qe7DhVUxs7E9P6mJp5Mi+/Aqg62NtAdggX09tayatSJic/A1dtfAEhY7YSGQonvtf+yMeeX6J+FQAAgKPQx4vGu/ieXvN41PPW93jyT1/+Lr+yWkxvKZHh/eSa7Db0/+bU/lJZwqrqmZUbw7KokmU/p6GWkhDCPBFXFlLOLSz98Z9/qy1167sdO3j1+uDV63TsjjcyfJhal92b+lG758Qd9PfPPdy5942covyhH/t9R6tv9FatBbQ8gyElMqSmNv705e+6P7/pUrrk5GR3oNc8DtygrBZkTu6Njxue8MGr1yzMCwAA4DD08eJcXHBPb1kt2FnwtoF6RqJ9j74SQhTT27mFpVJ2r8Pb2T/3sMJwXFnCys6Z5Ytuq3WJStk9ORZX+2N5ksD9uFzqVq6UK0/bP/eww9uppjbkDF4hROUGN5BvLPbpy+9kk2Twlk+s79FXcmnfWn368pnslT149Tq/siqXR/rs5bOqYfXgQzY2xGwlMvy+eSzMCwAA4CCf/Nx93eauga/vtnh9ILQaWSHpAi7UMxJtymLRZbWgptblyjpKZNgQt+SgYn2kLKuFYnrL5e2SrS1lcu+yuasBv2EysPlAbWdzG+Ru5lNp+xsaYNlgQ8M0xc2t8mHBEw6dliRlUyvsYN6/uLlVVgvKjWFz2K56OfP+7xtw+tRfwznlYzHfqbanfIaWfzUVjgUAAEBrIvECAAAAAJyJUc0AAAAAAGci8QIAAAAAnInECwAAAABwJhIvAAAAAMCZSLwAAAAAAGci8QIAAAAAnInECwAAAABwJhIvAAAAAMCZSLwAAAAAAGci8QIAAAAAnInECwAAAABwJhIvAAAAAMCZSLwAAAAAAGci8QIAAAAAnInECwAAAABwJhIvAAAAAMCZSLwAAAAAAGci8QIAAAAAnOn/AWlC8sxlNZqfAAAAAElFTkSuQmCC" alt="University of Utah Health"></div>
+
+<header>
+  <div class="hwrap">
+    <div class="brandbar"></div>
+    <div>
+      <div class="htitle">BD Operating System</div>
+      <div class="hsub">University of Utah Health · Office of Network Development &amp; Telehealth</div>
+    </div>
+    <nav>
+      <button data-view="system" class="active">The System</button>
+      <button data-view="library">Resource Library</button>
+      <button data-view="about">Mindset &amp; Commitments</button>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ================= VIEW: SYSTEM ================= -->
+  <section id="view-system" class="view on">
+    <div class="hero">
+      <span class="tag">A Framework for Business Development</span>
+      <h1>One system. Seven stages. <span>One consistent experience.</span></h1>
+      <p class="lead">How we turn relationships into intelligence, intelligence into strategy, and strategy into system value. Click any stage to see its purpose, the questions it answers, how we behave in it, and the tools that get it done.</p>
+      <div class="loop">
+        <div class="loop-row" id="loopRow"></div>
+        <div class="loopback"><em>Outcomes feed back into Analysis — the loop closes</em><div class="arrow"></div></div>
+      </div>
+    </div>
+    <div id="stageDetail"></div>
+  </section>
+
+  <!-- ================= VIEW: LIBRARY ================= -->
+  <section id="view-library" class="view">
+    <div class="hero" style="padding:26px 30px">
+      <span class="tag">Resource Library</span>
+      <h1 style="font-size:24px">Every tool, one place.</h1>
+      <p class="lead" style="font-size:14.5px">Download templates, frameworks, and references. Filter by stage or search by name.</p>
+    </div>
+    <div class="lib-tools">
+      <input id="libSearch" type="search" placeholder="Search resources… (e.g., StoryBrand, questions, outreach plan)">
+      <button class="fchip on" data-f="all">All</button>
+      <button class="fchip" data-f="1">Orientation</button>
+      <button class="fchip" data-f="2">Analysis</button>
+      <button class="fchip" data-f="3">Planning</button>
+      <button class="fchip" data-f="4">Execution</button>
+      <button class="fchip" data-f="5">Synthesis</button>
+      <button class="fchip" data-f="6">Reporting</button>
+    </div>
+    <div id="libList"></div>
+    <p class="note">Resources marked “Coming soon” are part of the system but not yet packaged for download. “Team Drive” resources contain internal content and live on the team shared drive (drive access required). Smartsheet, Tableau, and AI-agent tools open in their own platforms.</p>
+  </section>
+
+  <!-- ================= VIEW: ABOUT ================= -->
+  <section id="view-about" class="view">
+    <div class="hero" style="padding:26px 30px">
+      <span class="tag">The BD Mindset</span>
+      <h1 style="font-size:24px">We are guides, not oracles.</h1>
+      <p class="lead" style="font-size:14.5px">An incomplete map, honestly drawn, beats a confident map that's wrong. BD-OS isn't new work — it's a framework around the work we've always done, so every internal customer gets the same disciplined, consistent experience no matter who they work with on our team.</p>
+    </div>
+    <div class="grid2">
+      <div class="pcard"><h4>Not sales. Not marketing. Consulting.</h4><p>We operate as internal consultants: we diagnose before proposing, co-design hypotheses instead of selling answers, and support decisions without owning outcomes.</p></div>
+      <div class="pcard"><h4>An operating system, not a toolkit</h4><p>Teams see individual tools — they don't see where those tools sit in the chain or what their work feeds next. BD-OS makes the chain structural: no step is optional, each feeds the next, and the last feeds the first.</p></div>
+      <div class="pcard"><h4>Truth over polish</h4><p>If it's not documented well, it didn't happen — and it can't inform the system. We name what is known, unknown, and assumed, and we make uncertainty visible and usable.</p></div>
+      <div class="pcard"><h4>AI reveals, it doesn't create</h4><p>Our AI agents organize what we capture in the field. Poor inputs, poor outputs. Discipline at Execution is what makes Synthesis and Reporting trustworthy.</p></div>
+    </div>
+    <div class="commit">
+      <h4>If this system is working, then…</h4>
+      <ul>
+        <li>No meeting is unprepared — every connection is purposeful, never "just checking in."</li>
+        <li>Every interaction is documented well enough to inform the system.</li>
+        <li>Reports synthesize truth for decision-makers instead of dumping data.</li>
+        <li>Leaders make fewer decisions on assumptions and more on real market behavior.</li>
+        <li>Outcomes re-inform analysis — the system gets smarter about itself.</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+
+<footer>BD Operating System Hub · Maintained by Benton Lyons · Office of Network Development &amp; Telehealth · Updated July 2026</footer>
+
+<script>
+/* ── TEAM DRIVE LINKS ─────────────────────────────────────────
+   Documents with internal content live on the team shared drive,
+   not on this public site. Paste the SharePoint/drive URL for each
+   file below and its badge/button becomes a working link.        */
+const DRIVE_LINKS = {
+  "BD_OS_Applied_Example.html": "",
+  "StoryBrand_Workshop_Tool.html": "",
+  "StoryBrand_1_ONDT_SystemLeadership.docx": "",
+  "StoryBrand_2_PRC_ClinicalLeadership.docx": "",
+  "StoryBrand_3_MarketManager_HospitalPartners.docx": "",
+  "StoryBrand_4_PRC_ReferringProviders.docx": "",
+  "StoryBrand_PRC_Reference.docx": "",
+  "StoryBrand_MarketManager_Reference.docx": "",
+  "Referring_Provider_Communication_BD_Briefing.pptx": "",
+  "specialty-report.skill": "",
+  "Example_Specialty_Report_Spine.docx": ""
+};
+
+const STAGES = [
+ {
+  num:"01", name:"Orientation", verb:"Align", q:"What guides us?",
+  purpose:"Define how BD thinks, behaves, and creates value before any tactic, visit, or report. This stage doesn't do the work — it orients the work.",
+  key:"Align before acting. Establish trust, intent, and boundaries before “what we do.”",
+  questions:["How do we think and operate?","What is BD's role as a system capability?","What will BD own — and not own?","How do we create value for clinical programs and the health system?"],
+  behaviors:["Align before acting","Establish trust, intent, and boundaries","Clarify “how we work” before “what we do”","Set expectations around uncertainty and iteration","Name what BD will and will not own"],
+  outputs:["Shared expectations and credibility","Clear understanding of BD as a partner, not a vendor","A trust foundation that survives ambiguity","Protection from scope creep and misaligned asks"],
+  tools:[
+    {n:"BD OS Overview Deck",d:"The full framework presentation — start here",r:"BD_OS_Overview_Deck.pptx",b:"dl"},
+    {n:"BD OS Integrated View",d:"The whole system on one page: mindset → tools → behavior → value",r:"BD_OS_Integrated_View.pdf",b:"dl"},
+    {n:"BD Team Guiding Principles",d:"How we operate and what we stand for",r:"BD_Team_Guiding_Principles.docx",b:"dl"},
+    {n:"How BD Creates Value",d:"Outcomes slide for introducing BD to internal customers",r:"BD_Value_Slide.pptx",b:"dl"},
+    {n:"BD OS Applied Example",d:"Interactive walk-through of the system applied to a real scenario",r:"BD_OS_Applied_Example.html",b:"drive"},
+    {n:"External Provider Directory / Regional Provider Map",d:"Specialty provider databases and the interactive map",b:"ss"},
+    {n:"Story Database & Network of Relationships",d:"Institutional memory of stories and connections",b:"soon"}
+  ]
+ },
+ {
+  num:"02", name:"Analysis", verb:"Understand", q:"What do we know?",
+  purpose:"Turn experience into insight. Build the most accurate, grounded understanding of the market before proposing action. The output is an incomplete but informed map of reality.",
+  key:"If it's not understood, it can't be planned. Diagnose before proposing.",
+  questions:["What does the market and referral data actually say?","What are the constraints, risks, and unknowns?","What is known, unknown, and assumed?","Where are the real opportunities — and the friction points?"],
+  behaviors:["Diagnose before proposing","Ask better questions than others","Resist solutioning too early","Name what is known, unknown, and assumed","Present directional data with explicit boundaries"],
+  outputs:["Informed but incomplete market map","Clarity on constraints, risks, and unknowns","Better framing of the real problem","Credibility through intellectual honesty","Defensible foundation for planning"],
+  tools:[
+    {n:"Market & Referral Data",d:"Quantitative data tools — Tableau dashboards, referral volumes",b:"tab"},
+    {n:"Smartsheet Reports & Connection Database",d:"Qualitative market intelligence captured in the field",b:"ss"},
+    {n:"External Provider Database",d:"Regional specialty provider intelligence",b:"ss"},
+    {n:"Specialty Capability & Capacity Assessment",d:"What can the program actually absorb?",b:"soon"},
+    {n:"Opportunity Assessments",d:"Boise-style structured market opportunity reviews",b:"soon"},
+    {n:"Market Scoring Rubric",d:"Consistent criteria for comparing markets",b:"soon"},
+    {n:"Partner Feedback Synthesis",d:"Aggregated voice-of-partner themes",b:"ai"}
+  ]
+ },
+ {
+  num:"03", name:"Planning", verb:"Co-Design", q:"Where do we focus?",
+  purpose:"Translate BD's understanding into hypotheses — refined with clinical and operational expertise. The output commits to informed exploration, not predetermined outcomes.",
+  key:"Plan for learning, not just execution. Co-design hypotheses, not answers.",
+  questions:["Where should we engage, and why?","What does success or failure look like?","What's our message — and is it co-authored with providers and leaders?","Does the plan respect current capacity?"],
+  behaviors:["Co-design hypotheses, not answers","Explore options without committing outcomes","Align outreach to current-state reality","Plan for learning, not just execution","Apply a capacity-constrained overlay when needed"],
+  outputs:["Prioritized outreach hypotheses","Clear rationale for where and why to engage","Agreed-upon criteria for success or failure","Capacity-aligned engagement strategy","Protection from premature tactical commitments"],
+  tools:[
+    {n:"Outreach Plan Template",d:"Annual template with targets and hypotheses",r:"Outreach_Plan_Template.docx",b:"dl"},
+    {n:"Crafting a Compelling Message — Workshop Tool",d:"Interactive StoryBrand workshop for building program messages",r:"StoryBrand_Workshop_Tool.html",b:"drive"},
+    {n:"StoryBrand 1 · ONDT for System Leadership",d:"Message framework: positioning ONDT with system leaders",r:"StoryBrand_1_ONDT_SystemLeadership.docx",b:"drive"},
+    {n:"StoryBrand 2 · PRC for Clinical Leadership",d:"Message framework: PRC value for clinical leadership",r:"StoryBrand_2_PRC_ClinicalLeadership.docx",b:"drive"},
+    {n:"StoryBrand 3 · Market Manager for Hospital Partners",d:"Message framework: market managers with hospital partners",r:"StoryBrand_3_MarketManager_HospitalPartners.docx",b:"drive"},
+    {n:"StoryBrand 4 · PRC for Referring Providers",d:"Message framework: PRC value for referring providers",r:"StoryBrand_4_PRC_ReferringProviders.docx",b:"drive"},
+    {n:"StoryBrand Quick Reference · PRC",d:"One-page message reference for PRCs",r:"StoryBrand_PRC_Reference.docx",b:"drive"},
+    {n:"StoryBrand Quick Reference · Market Manager",d:"One-page message reference for market managers",r:"StoryBrand_MarketManager_Reference.docx",b:"drive"},
+    {n:"Asking Better Questions — Facilitator Guide",d:"Team workshop guide for question craft",r:"BD_Asking_Better_Questions_Facilitator_Guide.docx",b:"dl"},
+    {n:"BD Question Reference",d:"Field reference of high-value questions by situation",r:"BD_Question_Reference.docx",b:"dl"},
+    {n:"Referring Provider Communication Briefing",d:"Briefing deck on provider communication strategy",r:"Referring_Provider_Communication_BD_Briefing.pptx",b:"drive"},
+    {n:"Targeting & Prioritization Logic",d:"Outreach target types and prioritization criteria",b:"soon"}
+  ]
+ },
+ {
+  num:"04", name:"Execution", verb:"Engage", q:"How do we engage?",
+  purpose:"Test hypotheses through disciplined, value-driven engagement. The output is raw truth — stories, signals, friction, momentum — captured honestly enough to inform the system.",
+  key:"If it's not documented well, it didn't happen — and it can't inform the system.",
+  questions:["What actually happened, and what did we learn?","What signal did the market give us — interest, friction, confusion?","Are we representing programs accurately and setting honest expectations?","Did we document it well enough to inform the system?"],
+  behaviors:["Purposeful connections — never “just checking in”","Explore without promising; listen, don't decide","Represent the program accurately; set expectations honestly","Make an honest assessment of partner capabilities","Document market intelligence, wins, issues, and opportunities thoroughly"],
+  outputs:["Real market signal (interest, friction, confusion)","Strengthened, trust-based relationships","Trust preserved even under capacity constraints","Field intelligence that feeds synthesis","Engagement that respects time and reality"],
+  tools:[
+    {n:"Meeting Notes Assistant",d:"AI agent: converts meeting notes into Smartsheet-ready connection log entries",b:"ai"},
+    {n:"Stewardship Phase One-Pager",d:"Relationship stewardship guide for established partners",r:"Stewardship_Phase_One_Pager.docx",b:"dl"},
+    {n:"BD Question Reference",d:"Field reference of high-value questions by situation",r:"BD_Question_Reference.docx",b:"dl"},
+    {n:"Connection Database (Smartsheet)",d:"Where every connection gets logged",b:"ss"},
+    {n:"New Referrer Lock-In Workflow",d:"Standard workflow when a new referrer engages",b:"soon"},
+    {n:"Highlights Guidelines",d:"What makes a highlight worth elevating",b:"soon"},
+    {n:"Engagement Formats",d:"Provider-to-provider meetings · education events · lunches · site visits",b:"soon"}
+  ]
+ },
+ {
+  num:"05", name:"Synthesis", verb:"Translate", q:"What does it mean?",
+  purpose:"Turn raw activity into structured insight. Synthesis organizes, distills, and finds patterns — looking across interactions, not just at them.",
+  key:"AI doesn't create insight. It reveals what we captured. Poor inputs, poor outputs.",
+  questions:["What patterns are emerging across visits and markets?","What are the early indicators of opportunity or risk?","What's signal — and what's noise?","How do individual visits connect to system-level patterns?"],
+  behaviors:["Translate activity into meaning","Look across interactions, not just at them","Identify patterns, not anecdotes","Separate signal from noise","Let AI reveal what we captured, not create what we missed"],
+  outputs:["Themes and actionable insights","Early indicators of opportunity or risk","Strategic learning, not just activity logs","Evidence base for the reporting layer","Connection between individual visits and system-level patterns"],
+  tools:[
+    {n:"Initiative Report Agent",d:"AI agent: per-initiative synthesis from Smartsheet data",b:"ai"},
+    {n:"Topic Report Agents",d:"AI agents: education, referral process, feedback, transfer center",b:"ai"},
+    {n:"Market Report Agents",d:"AI agents: per-market synthesis for PRC meetings",b:"ai"},
+    {n:"Specialty Report Skill",d:"Installable Claude skill for quarterly/annual specialty reports",r:"specialty-report.skill",b:"drive"},
+    {n:"Meeting Notes Assistant",d:"AI agent: structured capture that makes synthesis possible",b:"ai"},
+    {n:"Smartsheet Reports",d:"Summary views of outreach efforts and connections",b:"ss"}
+  ]
+ },
+ {
+  num:"06", name:"Reporting", verb:"Communicate", q:"How do we communicate?",
+  purpose:"Put the right insight in front of the right audience so clarity rises to the surface. Synthesize — don't dump data. Make uncertainty visible and usable.",
+  key:"Enable the system to define the problem more accurately, ask better questions, and develop better solutions.",
+  questions:["Who needs this insight, and in what form?","What's known, what's emerging, and what's blocked?","What does leadership need to decide — and what do they need to see to decide it?"],
+  behaviors:["Clarify reality for decision-makers","Synthesize, don't dump raw data","Make uncertainty visible and usable","Communicate what's known, emerging, and blocked","Create shared understanding that informs action"],
+  outputs:["Shared understanding across stakeholders","Confidence in next steps","Reduced rework and misalignment","Transparency about what BD sees that others don't","Decision-ready intelligence, not performance justification"],
+  tools:[
+    {n:"Example: Annual Specialty Report (Spine)",d:"What a finished specialty report looks like",r:"Example_Specialty_Report_Spine.docx",b:"drive"},
+    {n:"BD Team Activity Report",d:"AI agent: weekly/monthly team report",b:"ai"},
+    {n:"Initiative · Market · Topic Reports",d:"AI agents: audience-scoped report lenses",b:"ai"},
+    {n:"BD Dashboard & ONDT Reports",d:"Standing dashboards and summaries",b:"ss"},
+    {n:"Tableau Reports",d:"Quantitative reporting layer",b:"tab"},
+    {n:"Executive-Ready Narratives & Ad-hoc Requests",d:"Custom synthesis for system leadership",b:"soon"}
+  ]
+ },
+ {
+  num:"07", name:"Outcomes", verb:"Impact", q:"What becomes possible?",
+  purpose:"When BD-OS is working, leaders make fewer decisions based on assumptions and more decisions grounded in real market behavior. Outcomes feed back into Analysis for the next iteration.",
+  key:"The loop closes. Outcomes re-inform analysis. The system gets smarter about itself.",
+  questions:["What changed because of our work?","What decisions did our intelligence enable?","What did the system learn — and what feeds the next cycle?"],
+  behaviors:["Enable better system decisions","Support choices — don't own outcomes","Close the loop with stakeholders","Prepare the system for what's next","Feed learnings back into the next cycle"],
+  outputs:["Better strategic decisions at the system level","Protected pipelines and relationships","Sustainable growth aligned with capacity","System confidence in BD as a capability","Optimized referral and transfer pathways","Continuous improvement through cyclical learning"],
+  tools:[
+    {n:"Leadership Decisions & Strategy Shifts",d:"BD intelligence informing system strategy",b:"soon"},
+    {n:"Resource Allocation Guidance",d:"Where the system invests next",b:"soon"},
+    {n:"Go / No-Go Determinations",d:"Evidence-based pursuit decisions",b:"soon"},
+    {n:"Capacity-Constrained Mode Activation",d:"Protecting trust when programs are full",b:"soon"},
+    {n:"Feedback Loop to Analysis",d:"Validated signal flows back into the market map",b:"soon"}
+  ]
+ }
+];
+
+const BADGES = {
+  dl:  (r)=>`<a class="badge b-dl" href="resources/${encodeURIComponent(r)}" download>Download</a>`,
+  drive:(r)=> DRIVE_LINKS[r]
+        ? `<a class="badge b-drive" href="${DRIVE_LINKS[r]}" target="_blank" rel="noopener" title="Opens on the team shared drive (drive access required)">Team Drive</a>`
+        : `<span class="badge b-drive pending" title="Stored on the team shared drive — link coming soon">Team Drive</span>`,
+  ss:  ()=>`<span class="badge b-ss" title="Lives in Smartsheet — link to be added">Smartsheet</span>`,
+  ai:  ()=>`<span class="badge b-ai" title="Run as an AI agent in Claude">AI Agent</span>`,
+  tab: ()=>`<span class="badge b-tab" title="Lives in Tableau — link to be added">Tableau</span>`,
+  soon:()=>`<span class="badge b-soon">Coming soon</span>`
+};
+
+// ---- Loop diagram ----
+const loopRow = document.getElementById('loopRow');
+STAGES.forEach((s,i)=>{
+  const d = document.createElement('div');
+  d.className = 'snode'+(i===0?' sel':'');
+  d.innerHTML = `<div class="num">${s.num}</div><div class="nm">${s.name}</div><div class="vb">${s.verb}</div><div class="q">${s.q}</div>`;
+  d.onclick = ()=>selectStage(i);
+  loopRow.appendChild(d);
+});
+
+function selectStage(i){
+  document.querySelectorAll('.snode').forEach((n,j)=>n.classList.toggle('sel', j===i));
+  const s = STAGES[i];
+  const tools = s.tools.map(t=>`
+    <div class="tool">
+      <div class="tn">${t.n}<small>${t.d||''}</small></div>
+      ${BADGES[t.b](t.r||'')}
+    </div>`).join('');
+  document.getElementById('stageDetail').innerHTML = `
+    <div class="stage-detail">
+      <div class="sd-head">
+        <div class="sd-num">${s.num}</div>
+        <div>
+          <h2>${s.name}</h2>
+          <div class="verb">${s.verb} · ${s.q}</div>
+          <p class="purpose">${s.purpose}</p>
+          <div class="keymsg">${s.key}</div>
+        </div>
+      </div>
+      <div class="sd-body">
+        <div class="sd-col">
+          <h3 class="sec">Questions we're answering</h3>
+          <ul class="qlist">${s.questions.map(x=>`<li>${x}</li>`).join('')}</ul>
+          <h3 class="sec alt">How we behave here</h3>
+          <ul class="blist">${s.behaviors.map(x=>`<li>${x}</li>`).join('')}</ul>
+          <h3 class="sec gold">Outputs &amp; value created</h3>
+          <ul class="olist">${s.outputs.map(x=>`<li>${x}</li>`).join('')}</ul>
+        </div>
+        <div class="sd-col">
+          <h3 class="sec">Tools &amp; resources for this stage</h3>
+          ${tools}
+        </div>
+      </div>
+    </div>`;
+}
+selectStage(0);
+
+// ---- Resource library ----
+const LIB = [];
+STAGES.forEach((s,si)=>{
+  s.tools.forEach(t=>{
+    if((t.b==='dl'||t.b==='drive') && t.r){
+      const ex = LIB.find(x=>x.r===t.r);
+      if(ex){ if(!ex.stages.includes(si+1)) ex.stages.push(si+1); }
+      else {
+        const ext = t.r.split('.').pop().toLowerCase();
+        LIB.push({n:t.n, d:t.d, r:t.r, b:t.b, ext:(ext==='skill'?'skill':ext), stages:[si+1]});
+      }
+    }
+  });
+});
+
+function libBtn(x){
+  if(x.b==='drive'){
+    return DRIVE_LINKS[x.r]
+      ? `<a class="dlbtn drive" href="${DRIVE_LINKS[x.r]}" target="_blank" rel="noopener">Team Drive</a>`
+      : `<span class="dlbtn ghost" title="Stored on the team shared drive — link coming soon">Team Drive</span>`;
+  }
+  return `<a class="dlbtn" href="resources/${encodeURIComponent(x.r)}" download>Download</a>`;
+}
+
+const libList = document.getElementById('libList');
+let fStage='all';
+function renderLib(){
+  const q = (document.getElementById('libSearch').value||'').toLowerCase();
+  libList.innerHTML = LIB
+    .filter(x=> (fStage==='all'||x.stages.includes(+fStage)) && (x.n.toLowerCase().includes(q)||(x.d||'').toLowerCase().includes(q)))
+    .map(x=>`
+      <div class="rcard">
+        <div class="ric ${x.ext}">${x.ext.toUpperCase()}</div>
+        <div class="rmain">
+          <div class="rt">${x.n}</div>
+          <div class="rd">${x.d||''}</div>
+          <div class="rs">${x.stages.map(s=>`<span class="stagechip">${STAGES[s-1].num} ${STAGES[s-1].name}</span>`).join('')}</div>
+        </div>
+        ${libBtn(x)}
+      </div>`).join('') || '<p class="note">No resources match.</p>';
+}
+document.getElementById('libSearch').addEventListener('input', renderLib);
+document.querySelectorAll('.fchip').forEach(c=>c.onclick=()=>{
+  document.querySelectorAll('.fchip').forEach(x=>x.classList.remove('on'));
+  c.classList.add('on'); fStage=c.dataset.f; renderLib();
+});
+renderLib();
+
+// ---- Nav ----
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.getElementById('view-'+b.dataset.view).classList.add('on');
+  window.scrollTo({top:0});
+});
+</script>
+</body>
+</html>
